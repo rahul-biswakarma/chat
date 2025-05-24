@@ -90,9 +90,9 @@ export const ChatContextProvider = ({
 
       case "userList":
         const userList = message.data.map((user: any) => ({
-          nickname: user.userSettings.nickname || DEFAULT_NICKNAME,
+          nickname: user.userSettings.userNickname || DEFAULT_NICKNAME,
           userIcon: user.userSettings.userIcon,
-          socketId: user.socketId,
+          socketId: user.socketConnectionId,
         }));
         setUsers(userList);
         break;

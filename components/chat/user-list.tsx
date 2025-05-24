@@ -39,22 +39,25 @@ export default function UserList() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full bg-card border-border">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-sm">
+        <CardTitle className="flex items-center justify-between text-sm text-card-foreground">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span>Users ({users.length})</span>
-            <Badge variant="secondary" className="text-xs">
+            <Badge
+              variant="secondary"
+              className="text-xs bg-secondary text-secondary-foreground"
+            >
               Online
             </Badge>
           </div>
           {chatRoomId && (
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={copyRoomId}
-              className="h-7 px-2"
+              className="text-muted-foreground hover:text-foreground"
               title="Copy Room ID"
             >
               <Copy className="h-3 w-3" />
@@ -62,7 +65,9 @@ export default function UserList() {
           )}
         </CardTitle>
         {chatRoomId && (
-          <p className="text-xs text-gray-500 truncate">Room: {chatRoomId}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            Room: {chatRoomId}
+          </p>
         )}
       </CardHeader>
       <CardContent className="pt-0">
@@ -70,28 +75,31 @@ export default function UserList() {
           {users.map((user, index) => (
             <div
               key={user.socketId || index}
-              className={`flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+              className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
                 user.socketId === currentUser?.socketId
-                  ? "bg-indigo-50 border border-indigo-200"
-                  : "bg-gray-50"
+                  ? "bg-accent/50 border border-border"
+                  : "bg-muted hover:bg-muted"
               }`}
             >
               <div className="relative">
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={user.userIcon} alt={user.nickname} />
-                  <AvatarFallback className="bg-indigo-500 text-white text-xs">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {getUserInitials(user.nickname)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-chart-2 border-2 border-card rounded-full" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-900 truncate">
+                  <span className="text-sm font-medium text-card-foreground truncate">
                     {user.nickname}
                   </span>
                   {user.socketId === currentUser?.socketId && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge
+                      variant="secondary"
+                      className="text-mono text-xs bg-accent text-accent-foreground"
+                    >
                       You
                     </Badge>
                   )}
@@ -100,7 +108,7 @@ export default function UserList() {
             </div>
           ))}
           {users.length === 0 && (
-            <div className="text-center text-gray-500 text-sm py-4">
+            <div className="text-center text-muted-foreground text-sm py-4">
               No users in this room yet
             </div>
           )}
