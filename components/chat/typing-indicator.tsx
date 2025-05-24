@@ -4,17 +4,20 @@ import { useChatContext } from "@/components/context/chat.context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function TypingIndicator() {
-  const { usersTyping, users } = useChatContext();
+  const { usersTyping, users, currentUser } = useChatContext();
 
   if (usersTyping.length === 0) return null;
 
   const getTypingUsers = () => {
     return usersTyping
+      .filter(socketId => socketId !== currentUser?.socketId)
       .map(socketId => users.find(user => user.socketId === socketId))
       .filter(Boolean);
   };
 
   const typingUsers = getTypingUsers();
+
+  if (typingUsers.length === 0) return null;
 
   const getUserInitials = (nickname: string) => {
     return nickname

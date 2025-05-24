@@ -10,19 +10,29 @@ import { formatTimestamp, getUserInitials } from "./utils";
 export default function MessageList() {
   const { messages } = useChatContext();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
+    // For ScrollArea, we need to find the viewport and scroll it
+    if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
+      if (viewport) {
+        setTimeout(() => {
+          viewport.scrollTop = viewport.scrollHeight;
+        }, 10);
+      }
+    }
+
+    // Fallback: scroll to the messages end ref
+    if (messagesEndRef.current) {
       setTimeout(() => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop =
-            scrollContainerRef.current.scrollHeight;
-        }
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 10);
     }
   };
@@ -41,14 +51,7 @@ export default function MessageList() {
 
   return (
     <div className="min-h-0 overflow-hidden">
-      <ScrollArea
-        ref={scrollContainerRef}
-        className="h-full overflow-y-auto bg-background"
-        style={{
-          scrollbarWidth: "thin",
-          scrollbarColor: "rgb(203 213 225) transparent",
-        }}
-      >
+      <ScrollArea ref={scrollAreaRef} className="h-full bg-background">
         <div className="p-4 space-y-4">
           {messages.map((message, index) => (
             <div
