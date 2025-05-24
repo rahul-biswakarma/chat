@@ -20,11 +20,11 @@ export default function ChatRoom() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-7xl p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-2rem)]">
-          <div className="lg:col-span-9 flex flex-col">
-            <Card className="bg-card border-border flex-1 flex flex-col">
+    <div className="h-screen bg-background grid grid-rows-[1fr] overflow-hidden">
+      <div className="container mx-auto max-w-7xl p-4 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+          <div className="lg:col-span-9 min-h-0">
+            <Card className="bg-card border-border h-full grid grid-rows-[auto_1fr]">
               <CardHeader className="bg-card">
                 <div className="flex items-center justify-between">
                   <div>
@@ -48,7 +48,7 @@ export default function ChatRoom() {
                 </div>
               </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col p-0 bg-background">
+              <CardContent className="p-0 bg-background min-h-0 grid grid-rows-[1fr_auto]">
                 <MessageList />
                 <MessageInput />
               </CardContent>

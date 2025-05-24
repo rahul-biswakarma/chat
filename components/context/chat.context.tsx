@@ -83,7 +83,7 @@ export const ChatContextProvider = ({
         const usersTyping = message.data.usersTyping;
         setUsersTyping(
           usersTyping.filter(
-            (user: string) => user !== currentUser?.socketId
+            (userId: string) => userId !== currentUser?.socketId
           ) || []
         );
         break;
