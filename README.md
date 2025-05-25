@@ -49,36 +49,6 @@ https://github.com/user-attachments/assets/72cfb3c0-c74a-42d9-9ecb-0b811e1783d9
 - **WebSocket Integration** - Real-time communication via teleparty-websocket-lib
 - **Code Quality** - ESLint, Prettier, and Husky pre-commit hooks
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm, yarn, pnpm, or bun
-
-### Installation
-
-1. Clone the repository:
-
-```bash
-git clone <repository-url>
-cd teleparty
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Start the development server:
-
-```bash
-npm run dev
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
-
 ## 📱 How to Use
 
 ### Creating a Chat Room
