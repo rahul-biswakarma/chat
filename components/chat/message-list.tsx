@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
 import TipTapEditor from "@/components/chat/tiptap-editor";
-import TypingIndicator from "@/components/chat/typing-indicator";
 import { useChatContext } from "@/components/context/chat.context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -111,7 +110,6 @@ export default function MessageList() {
             );
           })}
 
-          <TypingIndicator />
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 interface TipTapEditorProps {
   onTypingStart?: () => void;
   onTypingStop?: () => void;
-  // New props for readonly mode
   readonly?: boolean;
   content?: JSONContent;
   fallbackText?: string;
@@ -41,7 +40,6 @@ export default function TipTapEditor({
   className,
 }: TipTapEditorProps) {
   const { client } = useChatContext();
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -54,6 +52,23 @@ export default function TipTapEditor({
         paragraph: {
           HTMLAttributes: {
             class: readonly ? "text-card-foreground" : "text-foreground",
+          },
+        },
+        bulletList: {
+          HTMLAttributes: {
+            class: readonly ? "list-disc pl-6 my-2" : "list-disc pl-6 my-2",
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: readonly
+              ? "list-decimal pl-6 my-2"
+              : "list-decimal pl-6 my-2",
+          },
+        },
+        listItem: {
+          HTMLAttributes: {
+            class: readonly ? "my-1" : "my-1",
           },
         },
       }),
@@ -89,7 +104,7 @@ export default function TipTapEditor({
       handleKeyDown: readonly
         ? undefined
         : (view, event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && event.shiftKey) {
               event.preventDefault();
               sendMessage();
               return true;
@@ -102,43 +117,12 @@ export default function TipTapEditor({
       : ({ editor }) => {
           const content = editor.getText().trim();
           if (content) {
-            handleTypingStart();
+            onTypingStart?.();
           } else {
-            handleTypingStop();
+            onTypingStop?.();
           }
         },
   });
-
-  const handleTypingStart = () => {
-    if (!client || readonly) return;
-
-    client.sendMessage(SocketMessageTypes.SET_TYPING_PRESENCE, {
-      typing: true,
-    });
-    onTypingStart?.();
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      handleTypingStop();
-    }, 3000);
-  };
-
-  const handleTypingStop = () => {
-    if (!client || readonly) return;
-
-    client.sendMessage(SocketMessageTypes.SET_TYPING_PRESENCE, {
-      typing: false,
-    });
-    onTypingStop?.();
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
-    }
-  };
 
   const sendMessage = () => {
     if (!client || !editor || readonly) return;
@@ -153,7 +137,7 @@ export default function TipTapEditor({
         body: richContent,
       });
       editor.commands.clearContent();
-      handleTypingStop();
+      onTypingStop?.();
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error("Failed to send message", {
