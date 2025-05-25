@@ -87,6 +87,16 @@ export default function TipTapEditor({
           ? `prose prose-sm max-w-none text-card-foreground rich-message-content ${className || ""}`
           : "prose prose-sm max-w-none focus:outline-none text-foreground placeholder:text-muted-foreground min-h-[40px] max-h-[120px] overflow-y-auto p-3",
       },
+      handleKeyDown: readonly
+        ? undefined
+        : (view, event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              sendMessage();
+              return true;
+            }
+            return false;
+          },
     },
     onUpdate: readonly
       ? undefined
@@ -150,15 +160,6 @@ export default function TipTapEditor({
       toast.error("Failed to send message", {
         description: "Please try again",
       });
-    }
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (readonly) return;
-
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      sendMessage();
     }
   };
 
@@ -253,7 +254,7 @@ export default function TipTapEditor({
           </Button>
         </div>
 
-        <div onKeyDown={handleKeyDown}>
+        <div>
           <EditorContent
             editor={editor}
             className="tiptap-editor min-h-[80px]"

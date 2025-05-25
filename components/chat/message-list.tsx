@@ -51,9 +51,26 @@ export default function MessageList() {
                 } ${showUserInfo ? "pt-4" : "pt-2"}`}
               >
                 {message.isSystemMessage ? (
-                  <div className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm border border-border">
-                    {message.body}
-                  </div>
+                  message.userNickname ? (
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="w-6 h-6 flex-shrink-0">
+                        <AvatarImage
+                          src={message.userIcon}
+                          alt={message.userNickname}
+                        />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {getUserInitials(message.userNickname)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm border border-border">
+                        {message.body}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm border border-border">
+                      {message.body}
+                    </div>
+                  )
                 ) : (
                   <div className="flex items-start space-x-3 max-w-[80%]">
                     {showUserInfo ? (

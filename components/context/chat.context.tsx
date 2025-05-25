@@ -31,7 +31,7 @@ interface ChatContextType {
   usersTyping: string[];
   messages: SessionChatMessage[];
   setMessages: Dispatch<SetStateAction<SessionChatMessage[]>>;
-  addSystemMessage: (text: string) => void;
+  addSystemMessage: (text: string, user?: User) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -53,12 +53,16 @@ export const ChatContextProvider = ({
   const [users, setUsers] = useState<User[]>([]);
   const [usersTyping, setUsersTyping] = useState<string[]>([]);
 
-  const addSystemMessage = (text: string) => {
+  const addSystemMessage = (text: string, user?: User) => {
     const systemMessage: SessionChatMessage = {
       isSystemMessage: true,
       body: text,
       permId: "system",
       timestamp: Date.now(),
+      ...(user && {
+        userNickname: user.nickname,
+        userIcon: user.userIcon,
+      }),
     };
     setMessages(prev => [...prev, systemMessage]);
   };
@@ -94,6 +98,33 @@ export const ChatContextProvider = ({
           userIcon: user.userSettings.userIcon,
           socketId: user.socketConnectionId,
         }));
+
+        // Check for new users (joined)
+        if (users.length > 0) {
+          const newUsers = userList.filter(
+            (user: User) =>
+              !users.some(prevUser => prevUser.socketId === user.socketId)
+          );
+          newUsers.forEach((user: User) => {
+            if (user.socketId !== currentUser?.socketId) {
+              addSystemMessage(`${user.nickname} joined the party 🎉`, user);
+            }
+          });
+
+          // Check for users who left
+          const leftUsers = users.filter(
+            (prevUser: User) =>
+              !userList.some(
+                (user: User) => user.socketId === prevUser.socketId
+              )
+          );
+          leftUsers.forEach((user: User) => {
+            if (user.socketId !== currentUser?.socketId) {
+              addSystemMessage(`${user.nickname} left the party 👋`, user);
+            }
+          });
+        }
+
         setUsers(userList);
         break;
     }
@@ -109,6 +140,8 @@ export const ChatContextProvider = ({
       },
       onClose: () => {
         setIsConnected(false);
+        setUsers([]);
+        setUsersTyping([]);
         toast.error("Connection lost", {
           description: "Please reload the page to reconnect",
           duration: 5000,
