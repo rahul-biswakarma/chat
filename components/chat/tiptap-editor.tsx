@@ -15,7 +15,6 @@ import {
   ListOrdered,
   Send,
   Strikethrough,
-  Table,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SocketMessageTypes } from "teleparty-websocket-lib";
@@ -248,9 +247,6 @@ export default function TipTapEditor({
             className={`h-8 w-8 p-0 ${editor.isActive("orderedList") ? "bg-accent" : ""}`}
           >
             <ListOrdered className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Table className="h-4 w-4" />
           </Button>
         </div>
 

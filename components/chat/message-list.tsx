@@ -52,7 +52,7 @@ export default function MessageList() {
               >
                 {message.isSystemMessage ? (
                   message.userNickname ? (
-                    <div className="flex items-center space-x-3">
+                    <div className="flex gap-1 items-center bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm border border-border">
                       <Avatar className="w-6 h-6 flex-shrink-0">
                         <AvatarImage
                           src={message.userIcon}
@@ -62,9 +62,10 @@ export default function MessageList() {
                           {getUserInitials(message.userNickname)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm border border-border">
-                        {message.body}
-                      </div>
+                      <span className="text-primary-foreground font-semibold">
+                        {message.userNickname}
+                      </span>
+                      <i className="text-muted-foreground">{message.body}</i>
                     </div>
                   ) : (
                     <div className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm border border-border">

@@ -99,32 +99,6 @@ export const ChatContextProvider = ({
           socketId: user.socketConnectionId,
         }));
 
-        // Check for new users (joined)
-        if (users.length > 0) {
-          const newUsers = userList.filter(
-            (user: User) =>
-              !users.some(prevUser => prevUser.socketId === user.socketId)
-          );
-          newUsers.forEach((user: User) => {
-            if (user.socketId !== currentUser?.socketId) {
-              addSystemMessage(`${user.nickname} joined the party 🎉`, user);
-            }
-          });
-
-          // Check for users who left
-          const leftUsers = users.filter(
-            (prevUser: User) =>
-              !userList.some(
-                (user: User) => user.socketId === prevUser.socketId
-              )
-          );
-          leftUsers.forEach((user: User) => {
-            if (user.socketId !== currentUser?.socketId) {
-              addSystemMessage(`${user.nickname} left the party 👋`, user);
-            }
-          });
-        }
-
         setUsers(userList);
         break;
     }

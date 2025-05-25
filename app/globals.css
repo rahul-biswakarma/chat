@@ -199,8 +199,25 @@ body {
   margin: 0.5rem 0;
 }
 
+.tiptap-editor .ProseMirror ul {
+  list-style-type: disc;
+}
+
+.tiptap-editor .ProseMirror ol {
+  list-style-type: decimal;
+}
+
 .tiptap-editor .ProseMirror li {
   margin: 0.25rem 0;
+  display: list-item;
+}
+
+.tiptap-editor .ProseMirror ul ul {
+  list-style-type: circle;
+}
+
+.tiptap-editor .ProseMirror ul ul ul {
+  list-style-type: square;
 }
 
 .tiptap-editor .ProseMirror code {
@@ -253,8 +270,25 @@ body {
   margin: 0.5rem 0;
 }
 
+.rich-message-content .ProseMirror ul {
+  list-style-type: disc;
+}
+
+.rich-message-content .ProseMirror ol {
+  list-style-type: decimal;
+}
+
 .rich-message-content .ProseMirror li {
   margin: 0.25rem 0;
+  display: list-item;
+}
+
+.rich-message-content .ProseMirror ul ul {
+  list-style-type: circle;
+}
+
+.rich-message-content .ProseMirror ul ul ul {
+  list-style-type: square;
 }
 
 .rich-message-content .ProseMirror a {
@@ -265,4 +299,27 @@ body {
 .rich-message-content .ProseMirror a:hover {
   color: hsl(var(--primary));
   opacity: 0.8;
+}
+
+.tiptap-editor .ProseMirror ul,
+.tiptap-editor .ProseMirror ol,
+.rich-message-content .ProseMirror ul,
+.rich-message-content .ProseMirror ol {
+  list-style-position: outside;
+  margin-left: 0;
+  padding-left: 1.5rem;
+}
+
+.tiptap-editor .ProseMirror li,
+.rich-message-content .ProseMirror li {
+  position: relative;
+}
+
+/* Fix for nested lists */
+.tiptap-editor .ProseMirror li > ul,
+.tiptap-editor .ProseMirror li > ol,
+.rich-message-content .ProseMirror li > ul,
+.rich-message-content .ProseMirror li > ol {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }

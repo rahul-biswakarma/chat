@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ChatRoom() {
-  const { currentUser, setChatRoomId, setMessages } = useChatContext();
+  const { currentUser, setChatRoomId, setMessages, client } = useChatContext();
 
   const leaveRoom = () => {
+    client?.teardown();
     setChatRoomId(null);
     setMessages([]);
   };
