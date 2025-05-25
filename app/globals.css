@@ -221,10 +221,9 @@ body {
 }
 
 .tiptap-editor .ProseMirror code {
-  background-color: hsl(var(--muted));
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
-  font-size: 0.875em;
+  font-family: var(--font-mono);
 }
 
 .tiptap-editor .ProseMirror a {

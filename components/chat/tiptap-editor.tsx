@@ -10,7 +10,6 @@ import {
   Bold,
   Code,
   Italic,
-  Link as LinkIcon,
   List,
   ListOrdered,
   Send,
@@ -19,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { SocketMessageTypes } from "teleparty-websocket-lib";
 
+import LinkDialog from "@/components/chat/link-dialog";
 import { useChatContext } from "@/components/context/chat.context";
 import { Button } from "@/components/ui/button";
 
@@ -78,10 +78,8 @@ export default function TipTapEditor({
           class: readonly
             ? "text-primary underline hover:text-primary/80"
             : "text-blue-500 underline",
-          ...(readonly && {
-            target: "_blank",
-            rel: "noopener noreferrer",
-          }),
+          target: "_blank",
+          rel: "noopener noreferrer",
         },
       }),
       ...(readonly
@@ -146,11 +144,8 @@ export default function TipTapEditor({
     }
   };
 
-  const addLink = () => {
-    if (readonly) return;
-
-    const url = window.prompt("Enter URL:");
-    if (url && editor) {
+  const handleAddLink = (url: string) => {
+    if (editor) {
       editor.chain().focus().setLink({ href: url }).run();
     }
   };
@@ -208,14 +203,10 @@ export default function TipTapEditor({
           >
             <Code className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addLink}
-            className={`h-8 w-8 p-0 ${editor.isActive("link") ? "bg-accent" : ""}`}
-          >
-            <LinkIcon className="h-4 w-4" />
-          </Button>
+          <LinkDialog
+            onAddLink={handleAddLink}
+            isActive={editor.isActive("link")}
+          />
           <Button
             variant="ghost"
             size="sm"
