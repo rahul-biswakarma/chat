@@ -6,6 +6,7 @@ import { MessageCircle } from "lucide-react";
 
 import MessageInput from "@/components/chat/message-input";
 import MessageList from "@/components/chat/message-list";
+import MobileUsersMenu from "@/components/chat/mobile-users-menu";
 import UserList from "@/components/chat/user-list";
 import { useChatContext } from "@/components/context/chat.context";
 import { Button } from "@/components/ui/button";
@@ -38,14 +39,17 @@ export default function ChatRoom() {
                       Welcome, {currentUser?.nickname}!
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={leaveRoom}
-                    size="sm"
-                    className="border-border text-foreground hover:bg-accent hover:text-accent-foreground"
-                  >
-                    Leave
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <MobileUsersMenu />
+                    <Button
+                      variant="outline"
+                      onClick={leaveRoom}
+                      size="sm"
+                      className="border-border text-foreground hover:bg-accent hover:text-accent-foreground"
+                    >
+                      Leave
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
 

@@ -31,7 +31,6 @@ export default function LinkDialog({ onAddLink, isActive }: LinkDialogProps) {
 
     if (!url.trim()) return;
 
-    // auto add https:// if no protocol is present
     let formattedUrl = url.trim();
     if (!formattedUrl.match(/^https?:\/\//)) {
       formattedUrl = `https://${formattedUrl}`;

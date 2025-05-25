@@ -133,7 +133,6 @@ export const ChatContextProvider = ({
     setClient(telepartyClient);
   };
 
-  // Add system message when room is set
   useEffect(() => {
     if (chatRoomId) {
       addSystemMessage(`Welcome to the chat room! Room ID: ${chatRoomId}`);
@@ -148,7 +147,6 @@ export const ChatContextProvider = ({
         description: "Please reload the page to try again",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
