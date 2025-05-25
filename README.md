@@ -2,6 +2,11 @@
 
 A real-time chat application built with Next.js and WebSocket technology, featuring rich text messaging, user presence indicators, and a modern dark theme interface.
 
+
+https://github.com/user-attachments/assets/72cfb3c0-c74a-42d9-9ecb-0b811e1783d9
+
+
+
 ## ✨ Features
 
 ### 🚀 Core Chat Functionality
