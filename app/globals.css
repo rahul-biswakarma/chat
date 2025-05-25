@@ -171,6 +171,9 @@ body {
 
 .tiptap-editor .ProseMirror {
   outline: none;
+  min-height: inherit;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
@@ -187,6 +190,79 @@ body {
 }
 
 .tiptap-editor .ProseMirror:focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
+  outline: none;
+}
+
+.tiptap-editor .ProseMirror ul,
+.tiptap-editor .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.tiptap-editor .ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.tiptap-editor .ProseMirror code {
+  background-color: hsl(var(--muted));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.tiptap-editor .ProseMirror a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+/* Rich message content styles */
+.rich-message-content .ProseMirror {
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rich-message-content .ProseMirror p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.rich-message-content .ProseMirror strong {
+  font-weight: 600;
+}
+
+.rich-message-content .ProseMirror em {
+  font-style: italic;
+}
+
+.rich-message-content .ProseMirror s {
+  text-decoration: line-through;
+}
+
+.rich-message-content .ProseMirror code {
+  background-color: hsl(var(--muted));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: var(--font-mono);
+}
+
+.rich-message-content .ProseMirror ul,
+.rich-message-content .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.rich-message-content .ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.rich-message-content .ProseMirror a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.rich-message-content .ProseMirror a:hover {
+  color: hsl(var(--primary));
+  opacity: 0.8;
 }
