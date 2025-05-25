@@ -93,7 +93,7 @@ export default function ChatLobby() {
         description: `Welcome to room: ${joinRoomId.trim()}`,
         duration: 3000,
       });
-    } catch (error) {
+    } catch {
       toast.error("Failed to join chat room", {
         description: "Please check the room ID and try again",
       });

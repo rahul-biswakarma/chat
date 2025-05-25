@@ -99,7 +99,7 @@ export default function MessageList() {
                       )}
                       <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-sm">
                         <TipTapEditor
-                          content={JSON.parse((message as any).body)}
+                          content={JSON.parse(message.body)}
                           readonly
                         />
                       </div>

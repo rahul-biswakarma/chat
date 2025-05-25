@@ -26,7 +26,9 @@ export const getUserInitials = (nickname: string): string => {
     .slice(0, 2);
 };
 
-export const hasRichContent = (message: any): boolean => {
+export const hasRichContent = (message: {
+  richContent?: JSONContent;
+}): boolean => {
   return (
     message.richContent &&
     typeof message.richContent === "object" &&

@@ -28,7 +28,12 @@ export default function TypingIndicator() {
       .slice(0, 2);
   };
 
-  const getUserAvatar = (user: any, index: number) => {
+  const getUserAvatar = (
+    user:
+      | { socketId?: string; userIcon?: string; nickname: string }
+      | undefined,
+    index: number
+  ) => {
     const stackedStyle = index > 0 ? { marginLeft: -8 } : {};
 
     return (

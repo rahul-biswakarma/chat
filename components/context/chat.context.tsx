@@ -93,11 +93,16 @@ export const ChatContextProvider = ({
         break;
 
       case "userList":
-        const userList = message.data.map((user: any) => ({
-          nickname: user.userSettings.userNickname || DEFAULT_NICKNAME,
-          userIcon: user.userSettings.userIcon,
-          socketId: user.socketConnectionId,
-        }));
+        const userList = message.data.map(
+          (user: {
+            userSettings: { userNickname?: string; userIcon?: string };
+            socketConnectionId: string;
+          }) => ({
+            nickname: user.userSettings.userNickname || DEFAULT_NICKNAME,
+            userIcon: user.userSettings.userIcon,
+            socketId: user.socketConnectionId,
+          })
+        );
 
         setUsers(userList);
         break;
@@ -138,7 +143,7 @@ export const ChatContextProvider = ({
   useEffect(() => {
     try {
       initializeClient();
-    } catch (error) {
+    } catch {
       toast.error("Failed to connect to chat service", {
         description: "Please reload the page to try again",
       });
