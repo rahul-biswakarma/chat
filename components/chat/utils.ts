@@ -29,7 +29,7 @@ export const getUserInitials = (nickname: string): string => {
 export const hasRichContent = (message: {
   richContent?: JSONContent;
 }): boolean => {
-  return (
+  return !!(
     message.richContent &&
     typeof message.richContent === "object" &&
     message.richContent.content &&
