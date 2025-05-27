@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -13,7 +12,9 @@
     "format:lint": "npm run format && npm run lint:fix",
     "prepare": "husky",
     "export": "next export",
-    "deploy": "gh-pages -d out"
+    "build": "next build && echo > out/.nojekyll",
+    "deploy": "gh-pages -d out --dotfiles",
+    "deploy:all": "npm run build && npm run deploy"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
