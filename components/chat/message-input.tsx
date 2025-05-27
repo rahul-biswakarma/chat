@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 
-import { SocketMessageTypes } from "teleparty-websocket-lib";
+import { SocketMessageTypes } from "@watchparty-org/teleparty-websocket-lib";
 
 import TipTapEditor from "@/components/chat/tiptap-editor";
 import TypingIndicator from "@/components/chat/typing-indicator";

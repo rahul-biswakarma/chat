@@ -7,14 +7,14 @@ import {
   useState,
 } from "react";
 
-import { toast } from "sonner";
 import {
   SessionChatMessage,
   SocketEventHandler,
   SocketMessageTypes,
   TelepartyClient,
-} from "teleparty-websocket-lib";
-import { SocketMessage } from "teleparty-websocket-lib/lib/SocketMessage";
+} from "@watchparty-org/teleparty-websocket-lib";
+import { SocketMessage } from "@watchparty-org/teleparty-websocket-lib/lib/SocketMessage";
+import { toast } from "sonner";
 
 import { User } from "@/lib/type";
 

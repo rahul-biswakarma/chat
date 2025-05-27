@@ -6,6 +6,7 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { SocketMessageTypes } from "@watchparty-org/teleparty-websocket-lib";
 import {
   Bold,
   Code,
@@ -16,7 +17,6 @@ import {
   Strikethrough,
 } from "lucide-react";
 import { toast } from "sonner";
-import { SocketMessageTypes } from "teleparty-websocket-lib";
 
 import LinkDialog from "@/components/chat/link-dialog";
 import { useChatContext } from "@/components/context/chat.context";
