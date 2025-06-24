@@ -13,11 +13,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ChatRoom() {
-  const { currentUser, setChatRoomId, setMessages, client } = useChatContext();
+  const {
+    currentUser,
+    setChatRoomId,
+    setMessages,
+    client,
+    isConnected,
+    disconnect,
+  } = useChatContext();
 
   const leaveRoom = () => {
-    client?.teardown();
-    setChatRoomId(null);
+    disconnect();
     setMessages([]);
   };
 
@@ -35,9 +41,11 @@ export default function ChatRoom() {
                       <span className="hidden sm:inline">Chat Room</span>
                       <span className="sm:hidden">Chat</span>
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Welcome, {currentUser?.nickname}!
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Welcome, {currentUser?.nickname}!
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <MobileUsersMenu />

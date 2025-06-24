@@ -8,11 +8,11 @@ import TypingIndicator from "@/components/chat/typing-indicator";
 import { useChatContext } from "../context/chat.context";
 
 export default function MessageInput() {
-  const { client } = useChatContext();
+  const { client, isConnected } = useChatContext();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleTypingStart = () => {
-    if (!client) return;
+    if (!client || !isConnected) return;
 
     client.sendMessage(SocketMessageTypes.SET_TYPING_PRESENCE, {
       typing: true,
@@ -28,7 +28,7 @@ export default function MessageInput() {
   };
 
   const handleTypingStop = () => {
-    if (!client) return;
+    if (!client || !isConnected) return;
 
     client.sendMessage(SocketMessageTypes.SET_TYPING_PRESENCE, {
       typing: false,

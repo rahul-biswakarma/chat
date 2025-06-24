@@ -12,8 +12,6 @@ const nextConfig: NextConfig = {
     ],
   },
   trailingSlash: true,
-  basePath: "/chat",
-  assetPrefix: "/chat",
 };
 
 export default nextConfig;

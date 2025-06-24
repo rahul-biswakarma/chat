@@ -7,6 +7,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { SocketMessageTypes } from "@watchparty-org/teleparty-websocket-lib";
+import clsx from "clsx";
 import {
   Bold,
   Code,
@@ -39,7 +40,7 @@ export default function TipTapEditor({
   fallbackText,
   className,
 }: TipTapEditorProps) {
-  const { client } = useChatContext();
+  const { client, isConnected } = useChatContext();
 
   const editor = useEditor({
     extensions: [
@@ -102,7 +103,7 @@ export default function TipTapEditor({
       handleKeyDown: readonly
         ? undefined
         : (view, event) => {
-            if (event.key === "Enter" && event.shiftKey) {
+            if (event.key === "Enter") {
               event.preventDefault();
               sendMessage();
               return true;
@@ -124,6 +125,13 @@ export default function TipTapEditor({
 
   const sendMessage = () => {
     if (!client || !editor || readonly) return;
+
+    if (!isConnected) {
+      toast.error("Connection lost", {
+        description: "Unable to send message. Please wait for reconnection.",
+      });
+      return;
+    }
 
     const content = editor.getText().trim();
     if (!content) return;
@@ -169,7 +177,12 @@ export default function TipTapEditor({
 
   return (
     <div className="px-4">
-      <div className="bg-card/80 border border-border rounded-lg shadow-lg overflow-hidden">
+      <div
+        className={clsx(
+          "bg-card/80 border rounded-lg shadow-lg overflow-hidden",
+          !isConnected ? "border-red-500/50" : "border-border"
+        )}
+      >
         <div className="flex items-center gap-1 p-2 pb-0">
           <Button
             variant="ghost"
@@ -234,11 +247,16 @@ export default function TipTapEditor({
 
         <div className="flex items-center justify-end p-2 pt-0">
           <div className="flex items-center gap-2">
+            {!isConnected && (
+              <span className="text-xs text-red-500 font-medium">
+                Disconnected
+              </span>
+            )}
             <Button
               onClick={sendMessage}
-              disabled={!hasContent}
+              disabled={!hasContent || !isConnected}
               size="sm"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 w-8 p-0"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 w-8 p-0 disabled:bg-muted disabled:text-muted-foreground"
             >
               <Send className="h-4 w-4" />
             </Button>
