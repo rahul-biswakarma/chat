@@ -4,6 +4,7 @@ import React from "react";
 
 import { Users } from "lucide-react";
 
+import { useChatContext } from "@/components/context/chat.context";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -21,6 +22,7 @@ import { UserListHeader } from "./user-list-header";
 export default function MobileUsersMenu() {
   const { chatRoomId, users, currentUser, copyRoomId, getUserInitials } =
     useUserList();
+  const { isConnected } = useChatContext();
 
   return (
     <Sheet>
@@ -42,6 +44,7 @@ export default function MobileUsersMenu() {
                   userCount={users.length}
                   chatRoomId={chatRoomId}
                   onCopyRoomId={copyRoomId}
+                  isConnected={isConnected}
                 />
               </div>
               <SheetClose className="!relative" />
@@ -61,7 +64,7 @@ export default function MobileUsersMenu() {
           ))}
           {users.length === 0 && (
             <div className="text-center text-muted-foreground text-sm py-4">
-              No users in this room yet
+              {isConnected ? "No users in this room yet" : "Reconnecting..."}
             </div>
           )}
         </div>
