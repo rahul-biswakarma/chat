@@ -142,3 +142,13 @@ npm run deploy:all
 ```
 
 This will build the application and push the static files to the `gh-pages` branch of your repository. You will then need to configure your repository's settings to deploy from this branch.
+
+Then, run the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+**Note:** For local development, the application runs at `http://localhost:3000`. The production build is available at [https://rahul-biswakarma.github.io/chat/](https://rahul-biswakarma.github.io/chat/).
