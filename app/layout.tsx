@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
+import { ChatContextProvider } from "@/components/context/chat.context";
 import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
@@ -38,8 +39,10 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <ChatContextProvider>
+            {children}
+            <Toaster />
+          </ChatContextProvider>
         </ThemeProvider>
       </body>
     </html>

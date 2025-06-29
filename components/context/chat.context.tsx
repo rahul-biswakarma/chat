@@ -7,6 +7,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -22,8 +23,19 @@ import { User } from "@/lib/type";
 
 export const DEFAULT_NICKNAME = "Guest";
 
-// Generate a unique ID for this tab instance
-const TAB_ID = typeof window !== "undefined" ? nanoid() : "";
+const getTabId = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  let tabId = sessionStorage.getItem("teleparty_tab_id");
+  if (!tabId) {
+    tabId = nanoid();
+    sessionStorage.setItem("teleparty_tab_id", tabId);
+  }
+  return tabId;
+};
+
+const TAB_ID = getTabId();
 
 const getStorageKey = (key: string) => `teleparty_${key}_${TAB_ID}`;
 
@@ -34,7 +46,6 @@ const USER_ICON_STORAGE_KEY = getStorageKey("user_icon");
 interface ChatContextType {
   client: TelepartyClient | null;
   isConnected: boolean;
-  isReconnecting: boolean;
   chatRoomId: string | null;
   setChatRoomId: Dispatch<SetStateAction<string | null>>;
   currentUser: User | null;
@@ -56,32 +67,35 @@ export const ChatContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [client, setClient] = useState<TelepartyClient | null>(null);
-
-  const [chatRoomId, setChatRoomId] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(CHAT_ROOM_STORAGE_KEY);
-    }
-    return null;
-  });
-
+  const [chatRoomId, setChatRoomId] = useState<string | null>(() =>
+    typeof window !== "undefined"
+      ? localStorage.getItem(CHAT_ROOM_STORAGE_KEY)
+      : null
+  );
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    if (typeof window !== "undefined") {
-      const savedNickname = localStorage.getItem(USER_NICKNAME_STORAGE_KEY);
-      const savedIcon = localStorage.getItem(USER_ICON_STORAGE_KEY);
-      return {
-        nickname: savedNickname || DEFAULT_NICKNAME,
-        userIcon: savedIcon || undefined,
-      };
-    }
-    return { nickname: DEFAULT_NICKNAME };
+    if (typeof window === "undefined") return { nickname: DEFAULT_NICKNAME };
+    const savedNickname = localStorage.getItem(USER_NICKNAME_STORAGE_KEY);
+    const savedIcon = localStorage.getItem(USER_ICON_STORAGE_KEY);
+    return {
+      nickname: savedNickname || DEFAULT_NICKNAME,
+      userIcon: savedIcon || undefined,
+    };
   });
-
   const [messages, setMessages] = useState<SessionChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [usersTyping, setUsersTyping] = useState<string[]>([]);
   const [isIntentionalDisconnect, setIsIntentionalDisconnect] = useState(false);
-  const [isReconnecting, setIsReconnecting] = useState(false);
+
+  const chatRoomIdRef = useRef(chatRoomId);
+  useEffect(() => {
+    chatRoomIdRef.current = chatRoomId;
+  }, [chatRoomId]);
+
+  const currentUserRef = useRef(currentUser);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
   const addSystemMessage = useCallback((text: string, user?: User) => {
     const systemMessage: SessionChatMessage = {
@@ -89,10 +103,7 @@ export const ChatContextProvider = ({
       body: text,
       permId: "system",
       timestamp: Date.now(),
-      ...(user && {
-        userNickname: user.nickname,
-        userIcon: user.userIcon,
-      }),
+      ...(user && { userNickname: user.nickname, userIcon: user.userIcon }),
     };
     setMessages(prev => [...prev, systemMessage]);
   }, []);
@@ -107,24 +118,19 @@ export const ChatContextProvider = ({
             : { nickname: DEFAULT_NICKNAME, socketId: userId }
         );
         break;
-
       case SocketMessageTypes.SEND_MESSAGE:
-        const chatMessage: SessionChatMessage = message.data;
-        setMessages(prev => [...prev, chatMessage]);
+        setMessages(prev => [...prev, message.data]);
         break;
-
       case SocketMessageTypes.SET_TYPING_PRESENCE:
-        const usersTyping = message.data.usersTyping;
         setCurrentUser(prevUser => {
           setUsersTyping(
-            usersTyping.filter(
+            message.data.usersTyping.filter(
               (userId: string) => userId !== prevUser?.socketId
             ) || []
           );
           return prevUser;
         });
         break;
-
       case "userList":
         const userList = message.data.map(
           (user: {
@@ -145,21 +151,19 @@ export const ChatContextProvider = ({
     const newClient = new TelepartyClient({
       onConnectionReady: async () => {
         setIsConnected(true);
-        if (chatRoomId && currentUser?.nickname) {
+        if (chatRoomIdRef.current && currentUserRef.current?.nickname) {
           try {
             await newClient.joinChatRoom(
-              currentUser.nickname,
-              chatRoomId,
-              currentUser.userIcon
+              currentUserRef.current.nickname,
+              chatRoomIdRef.current,
+              currentUserRef.current.userIcon
             );
           } catch (error) {
+            console.error("Failed to rejoin chat room:", error);
             setChatRoomId(null);
-            if (typeof window !== "undefined") {
-              localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
-            }
+            localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
           }
         }
-        setIsReconnecting(false);
       },
       onClose: () => {
         setIsConnected(false);
@@ -170,7 +174,7 @@ export const ChatContextProvider = ({
       onMessage: handleIncomingMessage,
     });
     setClient(newClient);
-  }, [handleIncomingMessage, chatRoomId, currentUser, addSystemMessage]);
+  }, [handleIncomingMessage]);
 
   const reconnect = useCallback(() => {
     if (client) {
@@ -178,15 +182,11 @@ export const ChatContextProvider = ({
     }
     setClient(null);
     setIsIntentionalDisconnect(false);
-    setIsReconnecting(true);
   }, [client]);
 
   useEffect(() => {
     if (!client && !isIntentionalDisconnect) {
-      const timeoutId = setTimeout(() => {
-        connect();
-      }, 1000);
-
+      const timeoutId = setTimeout(connect, 1000);
       return () => clearTimeout(timeoutId);
     }
   }, [client, isIntentionalDisconnect, connect]);
@@ -203,26 +203,21 @@ export const ChatContextProvider = ({
   }, [isConnected, reconnect]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (chatRoomId) {
-        localStorage.setItem(CHAT_ROOM_STORAGE_KEY, chatRoomId);
-        addSystemMessage(`Welcome to the chat room! Room ID: ${chatRoomId}`);
-      } else {
-        localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
-      }
+    if (chatRoomId) {
+      localStorage.setItem(CHAT_ROOM_STORAGE_KEY, chatRoomId);
+    } else {
+      localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
     }
-  }, [chatRoomId, addSystemMessage]);
+  }, [chatRoomId]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && currentUser) {
-      if (currentUser.nickname) {
-        localStorage.setItem(USER_NICKNAME_STORAGE_KEY, currentUser.nickname);
-      }
-      if (currentUser.userIcon) {
-        localStorage.setItem(USER_ICON_STORAGE_KEY, currentUser.userIcon);
-      } else {
-        localStorage.removeItem(USER_ICON_STORAGE_KEY);
-      }
+    if (currentUser?.nickname) {
+      localStorage.setItem(USER_NICKNAME_STORAGE_KEY, currentUser.nickname);
+    }
+    if (currentUser?.userIcon) {
+      localStorage.setItem(USER_ICON_STORAGE_KEY, currentUser.userIcon);
+    } else {
+      localStorage.removeItem(USER_ICON_STORAGE_KEY);
     }
   }, [currentUser]);
 
@@ -236,11 +231,7 @@ export const ChatContextProvider = ({
     setUsers([]);
     setUsersTyping([]);
     setChatRoomId(null);
-
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
-    }
-
+    localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
     addSystemMessage("Disconnected from chat service");
   };
 
@@ -249,7 +240,6 @@ export const ChatContextProvider = ({
       value={{
         client,
         isConnected,
-        isReconnecting,
         chatRoomId,
         setChatRoomId,
         currentUser,
