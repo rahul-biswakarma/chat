@@ -2,10 +2,7 @@
 
 A real-time chat application built with Next.js and WebSocket technology, featuring rich text messaging, user presence indicators, and a modern dark theme interface.
 
-
 https://github.com/user-attachments/assets/72cfb3c0-c74a-42d9-9ecb-0b811e1783d9
-
-
 
 ## ✨ Features
 
@@ -116,3 +113,32 @@ This project uses:
 ├── lib/                   # Utility functions and types
 └── public/                # Static assets
 ```
+
+## Deployment
+
+This project can be deployed to GitHub Pages.
+
+### Configuration
+
+1.  Open `next.config.ts`.
+2.  Set the `basePath` and `assetPrefix` to the name of your GitHub repository. For example, if your repository is `https://github.com/your-username/chat`, you would set:
+
+    ```javascript
+    const nextConfig = {
+      output: "export",
+      basePath: "/chat",
+      images: {
+        unoptimized: true,
+      },
+    };
+    ```
+
+### Manual Deployment
+
+To deploy the site, run the following command:
+
+```bash
+npm run deploy:all
+```
+
+This will build the application and push the static files to the `gh-pages` branch of your repository. You will then need to configure your repository's settings to deploy from this branch.
