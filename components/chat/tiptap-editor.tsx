@@ -44,6 +44,7 @@ export default function TipTapEditor({
   const [hasContent, setHasContent] = React.useState(false);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         code: {
@@ -182,7 +183,7 @@ export default function TipTapEditor({
 
   return (
     <div className="bg-card border border-border rounded-lg">
-      <div className="border-b border-border p-2">
+      <div className="p-2">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"

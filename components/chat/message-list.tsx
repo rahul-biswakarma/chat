@@ -8,7 +8,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { formatTimestamp, getUserInitials } from "./utils";
 
 export default function MessageList() {
-  const { messages } = useChatContext();
+  const { messages, currentUser, isReconnecting } = useChatContext();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,11 +35,22 @@ export default function MessageList() {
     return currentMessage.userNickname !== previousMessage.userNickname;
   };
 
+  const filteredMessages = isReconnecting
+    ? messages.filter(
+        message =>
+          !(
+            message.isSystemMessage &&
+            message.body.includes("joined") &&
+            message.userNickname === currentUser?.nickname
+          )
+      )
+    : messages;
+
   return (
     <div className="min-h-0 overflow-hidden">
       <ScrollArea className="h-full bg-background">
         <div className="flex flex-col p-4">
-          {messages.map((message, index) => {
+          {filteredMessages.map((message, index) => {
             const showUserInfo = shouldShowUserInfo(index);
 
             return (

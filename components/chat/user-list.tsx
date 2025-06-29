@@ -13,8 +13,8 @@ export default function UserList() {
   const { isConnected } = useChatContext();
 
   return (
-    <Card className="bg-background border-border h-full">
-      <CardHeader className="p-4 pb-2">
+    <Card className="bg-background border-border h-full !gap-0">
+      <CardHeader className="p-4 pt-0 border-b border-border">
         <UserListHeader
           userCount={users.length}
           chatRoomId={chatRoomId}

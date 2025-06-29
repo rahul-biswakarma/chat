@@ -23,6 +23,35 @@ export default function ChatLobby() {
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
 
+  const shortenUrl = async (url: string) => {
+    if (url.length < 50) {
+      return url;
+    }
+
+    try {
+      const response = await fetch("/api/shorten-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to shorten URL");
+      }
+
+      const data = await response.json();
+      toast.success("Avatar URL shortened successfully!");
+      return data.shortUrl;
+    } catch (error) {
+      toast.error("Failed to shorten avatar URL", {
+        description: "The original URL will be used instead.",
+      });
+      return url;
+    }
+  };
+
   const createChatRoom = async () => {
     if (!client || !nickname.trim()) {
       toast.error("Please enter a nickname", {
@@ -40,12 +69,18 @@ export default function ChatLobby() {
 
     try {
       setIsCreating(true);
-      const newRoomId = await client.createChatRoom(nickname.trim(), userIcon);
+
+      const finalUserIcon = userIcon ? await shortenUrl(userIcon) : "";
+
+      const newRoomId = await client.createChatRoom(
+        nickname.trim(),
+        finalUserIcon
+      );
 
       setCurrentUser(prev => ({
         ...prev,
         nickname: nickname.trim(),
-        userIcon: userIcon || undefined,
+        userIcon: finalUserIcon || undefined,
       }));
 
       setChatRoomId(newRoomId);
@@ -80,12 +115,19 @@ export default function ChatLobby() {
 
     try {
       setIsJoining(true);
-      await client.joinChatRoom(nickname.trim(), joinRoomId.trim(), userIcon);
+
+      const finalUserIcon = userIcon ? await shortenUrl(userIcon) : "";
+
+      await client.joinChatRoom(
+        nickname.trim(),
+        joinRoomId.trim(),
+        finalUserIcon
+      );
 
       setCurrentUser(prev => ({
         ...prev,
         nickname: nickname.trim(),
-        userIcon: userIcon || undefined,
+        userIcon: finalUserIcon || undefined,
       }));
 
       setChatRoomId(joinRoomId.trim());

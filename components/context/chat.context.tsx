@@ -34,6 +34,7 @@ const USER_ICON_STORAGE_KEY = getStorageKey("user_icon");
 interface ChatContextType {
   client: TelepartyClient | null;
   isConnected: boolean;
+  isReconnecting: boolean;
   chatRoomId: string | null;
   setChatRoomId: Dispatch<SetStateAction<string | null>>;
   currentUser: User | null;
@@ -80,6 +81,7 @@ export const ChatContextProvider = ({
   const [users, setUsers] = useState<User[]>([]);
   const [usersTyping, setUsersTyping] = useState<string[]>([]);
   const [isIntentionalDisconnect, setIsIntentionalDisconnect] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   const addSystemMessage = useCallback((text: string, user?: User) => {
     const systemMessage: SessionChatMessage = {
@@ -151,13 +153,13 @@ export const ChatContextProvider = ({
               currentUser.userIcon
             );
           } catch (error) {
-            console.error("Failed to rejoin room:", error);
             setChatRoomId(null);
             if (typeof window !== "undefined") {
               localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
             }
           }
         }
+        setIsReconnecting(false);
       },
       onClose: () => {
         setIsConnected(false);
@@ -176,6 +178,7 @@ export const ChatContextProvider = ({
     }
     setClient(null);
     setIsIntentionalDisconnect(false);
+    setIsReconnecting(true);
   }, [client]);
 
   useEffect(() => {
@@ -246,6 +249,7 @@ export const ChatContextProvider = ({
       value={{
         client,
         isConnected,
+        isReconnecting,
         chatRoomId,
         setChatRoomId,
         currentUser,

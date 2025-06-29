@@ -42,7 +42,7 @@ export default function MessageInput() {
   };
 
   return (
-    <div>
+    <div className="px-4">
       <TypingIndicator />
       {!isConnected && (
         <div className="bg-red-500/10 text-red-500 text-sm p-2 mb-2 rounded-md flex items-center justify-between">
