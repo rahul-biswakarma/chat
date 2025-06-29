@@ -1,50 +1,79 @@
 # Teleparty Chat
 
-A real-time chat application built with Next.js and WebSocket technology, featuring rich text messaging, user presence indicators, and a modern dark theme interface.
+A real-time chat application built with Next.js and WebSocket technology, featuring rich text messaging, persistent history, user presence indicators, and a modern dark theme interface.
 
 https://github.com/user-attachments/assets/72cfb3c0-c74a-42d9-9ecb-0b811e1783d9
 
+## 🌐 Deployed URL
+
+The application is deployed and accessible via GitHub Pages.
+
+- **Production URL**: [https://rahul-biswakarma.github.io/teleparty/](https://rahul-biswakarma.github.io/teleparty/)
+
+## 🛠 Local Setup
+
+To run this project locally, follow these steps:
+
+1.  **Clone the repository**:
+
+    ```bash
+    git clone https://github.com/rahul-biswakarma/teleparty.git
+    cd teleparty
+    ```
+
+2.  **Install dependencies**:
+
+    ```bash
+    npm install
+    ```
+
+3.  **Run the development server**:
+
+    ```bash
+    npm run dev
+    ```
+
+4.  **Open the application**:
+    Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+
 ## ✨ Features
 
-### 🚀 Core Chat Functionality
+### 🚀 Core Functionality
 
-- **Real-time messaging** - Instant message delivery using WebSocket connections
-- **Create & Join Rooms** - Create new chat rooms or join existing ones with room IDs
-- **User Management** - Set custom nicknames and profile images
-- **Connection Status** - Real-time connection status indicators
-
-### 💬 Rich Text Messaging
-
-- **Rich Text Editor** - Powered by TipTap with formatting toolbar
-- **Text Formatting** - Bold, italic, strikethrough, and inline code
-- **Lists** - Bulleted and numbered lists support
-- **Link Support** - Add clickable links with automatic HTTPS prefixing
-- **Message History** - Persistent chat history during session
+- **Real-time Messaging**: Instant message delivery using WebSocket connections.
+- **Create & Join Rooms**: Easily create new chat rooms or join existing ones with a unique room ID.
+- **Persistent Chat History**: Chat history is saved per room using IndexedDB, allowing you to see previous messages upon rejoining.
+- **Multi-Tab Support**: Open the application in multiple browser tabs with independent sessions.
+- **Robust Reconnection**: Automatically reconnects and rejoins your last room on page refresh or when switching back to the tab.
 
 ### 👥 User Experience
 
-- **Live User List** - See all connected users in real-time
-- **Typing Indicators** - See when other users are typing
-- **User Avatars** - Custom profile images with fallback initials
-- **User Status** - Online presence indicators
-- **Mobile Responsive** - Optimized for mobile devices with collapsible user menu
+- **Custom Nicknames & Avatars**: Personalize your identity with a nickname and a profile image URL.
+- **Live User List**: See all connected users in real-time.
+- **Typing Indicators**: Know when other users are typing a message.
+- **System Messages**: Get notified when users join or leave the chat.
+- **URL Shortener**: Long avatar URLs are automatically shortened to keep the UI clean.
+- **Responsive Design**: A seamless experience on both desktop and mobile devices, with a dedicated menu for mobile users.
 
-### 🎨 Modern UI/UX
+### 🎨 Modern UI & Rich Text
 
-- **Dark Theme** - Beautiful dark mode interface
-- **Responsive Design** - Works seamlessly on desktop and mobile
-- **Smooth Animations** - Polished transitions and micro-interactions
-- **Toast Notifications** - User-friendly success and error messages
-- **Auto-scroll** - Messages automatically scroll to latest
+- **Rich Text Editor**: Powered by TipTap, allowing for formatted messages.
+- **Text Formatting**: Supports bold, italic, strikethrough, and inline code.
+- **Clickable Links**: Automatically detects and formats links.
+- **Dark Theme**: A sleek and modern dark mode interface.
+- **Toast Notifications**: User-friendly notifications for important events.
 
-### 🛠 Technical Features
+### 🔧 Technical Details
 
-- **TypeScript** - Full type safety throughout the application
-- **Next.js 15** - Latest React framework with App Router
-- **Tailwind CSS** - Modern utility-first styling
-- **Radix UI** - Accessible component primitives
-- **WebSocket Integration** - Real-time communication via teleparty-websocket-lib
-- **Code Quality** - ESLint, Prettier, and Husky pre-commit hooks
+- **Next.js & React**: Built with the latest features of Next.js and React.
+- **TypeScript**: Ensures full type safety across the application.
+- **Tailwind CSS**: A utility-first CSS framework for modern styling.
+- **Dexie.js**: A wrapper for IndexedDB to manage chat history storage.
+- **GitHub Actions**: Automated CI/CD pipeline for deploying to GitHub Pages.
+
+## 🏗 Deployment
+
+This project is configured for automated deployment to GitHub Pages using GitHub Actions. Any push to the `main` branch will trigger a workflow that builds the application and deploys the static files to the `gh-pages` branch.
 
 ## 📱 How to Use
 

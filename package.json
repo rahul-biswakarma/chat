@@ -31,6 +31,8 @@
     "@watchparty-org/teleparty-websocket-lib": "git+https://github.com/watchparty-org/teleparty-WebSocket-lib.git",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dexie": "^4.0.11",
+    "dexie-react-hooks": "^1.1.7",
     "lucide-react": "^0.511.0",
     "nanoid": "^5.1.5",
     "next": "15.1.8",

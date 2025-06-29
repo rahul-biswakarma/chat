@@ -19,6 +19,7 @@ import {
 import { SocketMessage } from "@watchparty-org/teleparty-websocket-lib/lib/SocketMessage";
 import { nanoid } from "nanoid";
 
+import { addMessageToDb, getMessagesForRoom } from "@/lib/db";
 import { User } from "@/lib/type";
 
 export const DEFAULT_NICKNAME = "Guest";
@@ -108,44 +109,50 @@ export const ChatContextProvider = ({
     setMessages(prev => [...prev, systemMessage]);
   }, []);
 
-  const handleIncomingMessage = useCallback((message: SocketMessage) => {
-    switch (message.type) {
-      case "userId":
-        const userId: string = message.data.userId;
-        setCurrentUser(prev =>
-          prev
-            ? { ...prev, socketId: userId }
-            : { nickname: DEFAULT_NICKNAME, socketId: userId }
-        );
-        break;
-      case SocketMessageTypes.SEND_MESSAGE:
-        setMessages(prev => [...prev, message.data]);
-        break;
-      case SocketMessageTypes.SET_TYPING_PRESENCE:
-        setCurrentUser(prevUser => {
-          setUsersTyping(
-            message.data.usersTyping.filter(
-              (userId: string) => userId !== prevUser?.socketId
-            ) || []
+  const handleIncomingMessage = useCallback(
+    (message: SocketMessage) => {
+      switch (message.type) {
+        case "userId":
+          const userId: string = message.data.userId;
+          setCurrentUser(prev =>
+            prev
+              ? { ...prev, socketId: userId }
+              : { nickname: DEFAULT_NICKNAME, socketId: userId }
           );
-          return prevUser;
-        });
-        break;
-      case "userList":
-        const userList = message.data.map(
-          (user: {
-            userSettings: { userNickname?: string; userIcon?: string };
-            socketConnectionId: string;
-          }) => ({
-            nickname: user.userSettings.userNickname || DEFAULT_NICKNAME,
-            userIcon: user.userSettings.userIcon,
-            socketId: user.socketConnectionId,
-          })
-        );
-        setUsers(userList);
-        break;
-    }
-  }, []);
+          break;
+        case SocketMessageTypes.SEND_MESSAGE:
+          if (chatRoomIdRef.current) {
+            addMessageToDb(message.data, chatRoomIdRef.current);
+          }
+          setMessages(prev => [...prev, message.data]);
+          break;
+        case SocketMessageTypes.SET_TYPING_PRESENCE:
+          setCurrentUser(prevUser => {
+            setUsersTyping(
+              message.data.usersTyping.filter(
+                (userId: string) => userId !== prevUser?.socketId
+              ) || []
+            );
+            return prevUser;
+          });
+          break;
+        case "userList":
+          const userList = message.data.map(
+            (user: {
+              userSettings: { userNickname?: string; userIcon?: string };
+              socketConnectionId: string;
+            }) => ({
+              nickname: user.userSettings.userNickname || DEFAULT_NICKNAME,
+              userIcon: user.userSettings.userIcon,
+              socketId: user.socketConnectionId,
+            })
+          );
+          setUsers(userList);
+          break;
+      }
+    },
+    [chatRoomIdRef]
+  );
 
   const connect = useCallback(() => {
     const newClient = new TelepartyClient({
@@ -205,8 +212,14 @@ export const ChatContextProvider = ({
   useEffect(() => {
     if (chatRoomId) {
       localStorage.setItem(CHAT_ROOM_STORAGE_KEY, chatRoomId);
+      const loadHistory = async () => {
+        const history = await getMessagesForRoom(chatRoomId);
+        setMessages(history);
+      };
+      loadHistory();
     } else {
       localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
+      setMessages([]);
     }
   }, [chatRoomId]);
 
