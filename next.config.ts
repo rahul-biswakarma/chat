@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
+  assetPrefix: "/chat",
   basePath: "/chat",
   images: {
     unoptimized: true,
