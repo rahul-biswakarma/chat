@@ -1,7 +1,10 @@
+"use client";
+
 import {
   createContext,
   Dispatch,
   SetStateAction,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -9,16 +12,24 @@ import {
 
 import {
   SessionChatMessage,
-  SocketEventHandler,
   SocketMessageTypes,
   TelepartyClient,
 } from "@watchparty-org/teleparty-websocket-lib";
 import { SocketMessage } from "@watchparty-org/teleparty-websocket-lib/lib/SocketMessage";
-import { toast } from "sonner";
+import { nanoid } from "nanoid";
 
 import { User } from "@/lib/type";
 
 export const DEFAULT_NICKNAME = "Guest";
+
+// Generate a unique ID for this tab instance
+const TAB_ID = typeof window !== "undefined" ? nanoid() : "";
+
+const getStorageKey = (key: string) => `teleparty_${key}_${TAB_ID}`;
+
+const CHAT_ROOM_STORAGE_KEY = getStorageKey("chat_room_id");
+const USER_NICKNAME_STORAGE_KEY = getStorageKey("user_nickname");
+const USER_ICON_STORAGE_KEY = getStorageKey("user_icon");
 
 interface ChatContextType {
   client: TelepartyClient | null;
@@ -38,10 +49,6 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-const CHAT_ROOM_STORAGE_KEY = "teleparty_chat_room_id";
-const USER_NICKNAME_STORAGE_KEY = "teleparty_user_nickname";
-const USER_ICON_STORAGE_KEY = "teleparty_user_icon";
-
 export const ChatContextProvider = ({
   children,
 }: {
@@ -49,7 +56,6 @@ export const ChatContextProvider = ({
 }) => {
   const [client, setClient] = useState<TelepartyClient | null>(null);
 
-  // initialize chatRoomId from localStorage
   const [chatRoomId, setChatRoomId] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem(CHAT_ROOM_STORAGE_KEY);
@@ -57,7 +63,6 @@ export const ChatContextProvider = ({
     return null;
   });
 
-  // initialize currentUser from localStorage
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     if (typeof window !== "undefined") {
       const savedNickname = localStorage.getItem(USER_NICKNAME_STORAGE_KEY);
@@ -72,19 +77,11 @@ export const ChatContextProvider = ({
 
   const [messages, setMessages] = useState<SessionChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-
   const [users, setUsers] = useState<User[]>([]);
   const [usersTyping, setUsersTyping] = useState<string[]>([]);
   const [isIntentionalDisconnect, setIsIntentionalDisconnect] = useState(false);
 
-  const reconnect = () => {
-    if (!isConnected) {
-      setIsIntentionalDisconnect(false);
-      initializeClient();
-    }
-  };
-
-  const addSystemMessage = (text: string, user?: User) => {
+  const addSystemMessage = useCallback((text: string, user?: User) => {
     const systemMessage: SessionChatMessage = {
       isSystemMessage: true,
       body: text,
@@ -96,17 +93,17 @@ export const ChatContextProvider = ({
       }),
     };
     setMessages(prev => [...prev, systemMessage]);
-  };
+  }, []);
 
-  const handleIncomingMessage = (message: SocketMessage) => {
+  const handleIncomingMessage = useCallback((message: SocketMessage) => {
     switch (message.type) {
       case "userId":
         const userId: string = message.data.userId;
-        setCurrentUser(prev => {
-          return prev
+        setCurrentUser(prev =>
+          prev
             ? { ...prev, socketId: userId }
-            : { nickname: DEFAULT_NICKNAME, socketId: userId };
-        });
+            : { nickname: DEFAULT_NICKNAME, socketId: userId }
+        );
         break;
 
       case SocketMessageTypes.SEND_MESSAGE:
@@ -116,11 +113,14 @@ export const ChatContextProvider = ({
 
       case SocketMessageTypes.SET_TYPING_PRESENCE:
         const usersTyping = message.data.usersTyping;
-        setUsersTyping(
-          usersTyping.filter(
-            (userId: string) => userId !== currentUser?.socketId
-          ) || []
-        );
+        setCurrentUser(prevUser => {
+          setUsersTyping(
+            usersTyping.filter(
+              (userId: string) => userId !== prevUser?.socketId
+            ) || []
+          );
+          return prevUser;
+        });
         break;
 
       case "userList":
@@ -134,77 +134,71 @@ export const ChatContextProvider = ({
             socketId: user.socketConnectionId,
           })
         );
-
         setUsers(userList);
         break;
     }
-  };
+  }, []);
 
-  const initializeClient = async () => {
-    const eventHandler: SocketEventHandler = {
-      onConnectionReady: () => {
+  const connect = useCallback(() => {
+    const newClient = new TelepartyClient({
+      onConnectionReady: async () => {
         setIsConnected(true);
-        setIsIntentionalDisconnect(false);
-
-        // if we were previously in a chat room, try to rejoin
         if (chatRoomId && currentUser?.nickname) {
-          toast.success("Reconnected to chat service", {
-            description: "Attempting to rejoin chat room...",
-          });
-
-          // attempt to rejoin the chat room
-          setTimeout(async () => {
-            try {
-              await telepartyClient.joinChatRoom(
-                currentUser.nickname,
-                chatRoomId,
-                currentUser.userIcon
-              );
-              addSystemMessage("Reconnected to chat room");
-            } catch (error) {
-              console.error("Failed to rejoin room:", error);
-              toast.error("Failed to rejoin chat room", {
-                description:
-                  "The room may no longer exist. Please create or join a new room.",
-                duration: 5000,
-              });
-              setChatRoomId(null);
+          try {
+            await newClient.joinChatRoom(
+              currentUser.nickname,
+              chatRoomId,
+              currentUser.userIcon
+            );
+          } catch (error) {
+            console.error("Failed to rejoin room:", error);
+            setChatRoomId(null);
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
             }
-          }, 1000);
-        } else {
-          toast.success("Connected to chat service", {
-            description: "You can now create or join chat rooms",
-          });
+          }
         }
       },
       onClose: () => {
         setIsConnected(false);
         setUsers([]);
         setUsersTyping([]);
-
-        // only show reconnection toast and attempt reconnection if it wasn't intentional
-        if (!isIntentionalDisconnect) {
-          toast.error("Connection lost", {
-            description: "Attempting to reconnect...",
-            duration: 5000,
-          });
-
-          // attempt to reconnect after a delay
-          setTimeout(() => {
-            if (!isConnected && !isIntentionalDisconnect) {
-              initializeClient();
-            }
-          }, 3000);
-        }
+        setClient(c => (c === newClient ? null : c));
       },
       onMessage: handleIncomingMessage,
+    });
+    setClient(newClient);
+  }, [handleIncomingMessage, chatRoomId, currentUser, addSystemMessage]);
+
+  const reconnect = useCallback(() => {
+    if (client) {
+      client.teardown();
+    }
+    setClient(null);
+    setIsIntentionalDisconnect(false);
+  }, [client]);
+
+  useEffect(() => {
+    if (!client && !isIntentionalDisconnect) {
+      const timeoutId = setTimeout(() => {
+        connect();
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [client, isIntentionalDisconnect, connect]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && !isConnected) {
+        reconnect();
+      }
     };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isConnected, reconnect]);
 
-    const telepartyClient = new TelepartyClient(eventHandler);
-    setClient(telepartyClient);
-  };
-
-  // save chatRoomId to localStorage when it changes
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (chatRoomId) {
@@ -214,9 +208,8 @@ export const ChatContextProvider = ({
         localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
       }
     }
-  }, [chatRoomId]);
+  }, [chatRoomId, addSystemMessage]);
 
-  // save currentUser to localStorage when it changes
   useEffect(() => {
     if (typeof window !== "undefined" && currentUser) {
       if (currentUser.nickname) {
@@ -230,27 +223,17 @@ export const ChatContextProvider = ({
     }
   }, [currentUser]);
 
-  useEffect(() => {
-    try {
-      initializeClient();
-    } catch {
-      toast.error("Failed to connect to chat service", {
-        description: "Please reload the page to try again",
-      });
-    }
-  }, []);
-
   const disconnect = () => {
     setIsIntentionalDisconnect(true);
     if (client) {
       client.teardown();
+      setClient(null);
     }
     setIsConnected(false);
     setUsers([]);
     setUsersTyping([]);
     setChatRoomId(null);
 
-    // clear localStorage when intentionally disconnecting
     if (typeof window !== "undefined") {
       localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
     }
@@ -283,7 +266,7 @@ export const ChatContextProvider = ({
 
 export const useChatContext = () => {
   const context = useContext(ChatContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useChatContext must be used within a ChatContextProvider");
   }
   return context;

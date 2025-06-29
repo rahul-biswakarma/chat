@@ -1,6 +1,7 @@
 import React from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useChatContext } from "@/components/context/chat.context";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useUserList } from "@/hooks/use-user-list";
 
 import { UserItem } from "./user-item";
@@ -9,19 +10,19 @@ import { UserListHeader } from "./user-list-header";
 export default function UserList() {
   const { chatRoomId, users, currentUser, copyRoomId, getUserInitials } =
     useUserList();
+  const { isConnected } = useChatContext();
 
   return (
-    <Card className="h-full bg-card border-border">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-card-foreground">
-          <UserListHeader
-            userCount={users.length}
-            chatRoomId={chatRoomId}
-            onCopyRoomId={copyRoomId}
-          />
-        </CardTitle>
+    <Card className="bg-background border-border h-full">
+      <CardHeader className="p-4 pb-2">
+        <UserListHeader
+          userCount={users.length}
+          chatRoomId={chatRoomId}
+          onCopyRoomId={copyRoomId}
+          isConnected={isConnected}
+        />
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="p-2">
         <div className="space-y-2">
           {users.map((user, index) => (
             <UserItem
@@ -34,7 +35,7 @@ export default function UserList() {
           ))}
           {users.length === 0 && (
             <div className="text-center text-muted-foreground text-sm py-4">
-              No users in this room yet
+              {isConnected ? "No users in this room yet" : "Reconnecting..."}
             </div>
           )}
         </div>

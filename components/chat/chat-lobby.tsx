@@ -14,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ChatLobby() {
-  const { client, isConnected, setChatRoomId, setCurrentUser } =
+  const { client, isConnected, setChatRoomId, setCurrentUser, reconnect } =
     useChatContext();
 
   const [nickname, setNickname] = useState("");
@@ -242,6 +242,16 @@ export default function ChatLobby() {
                   <span className={`font-medium ${status.color}`}>
                     {status.text}
                   </span>
+                  {!isConnected && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={reconnect}
+                      className="text-primary hover:text-primary/80 ml-2"
+                    >
+                      Reconnect
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>

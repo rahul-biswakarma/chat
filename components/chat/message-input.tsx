@@ -4,11 +4,12 @@ import { SocketMessageTypes } from "@watchparty-org/teleparty-websocket-lib";
 
 import TipTapEditor from "@/components/chat/tiptap-editor";
 import TypingIndicator from "@/components/chat/typing-indicator";
+import { Button } from "@/components/ui/button";
 
 import { useChatContext } from "../context/chat.context";
 
 export default function MessageInput() {
-  const { client, isConnected } = useChatContext();
+  const { client, isConnected, reconnect } = useChatContext();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleTypingStart = () => {
@@ -43,6 +44,19 @@ export default function MessageInput() {
   return (
     <div>
       <TypingIndicator />
+      {!isConnected && (
+        <div className="bg-red-500/10 text-red-500 text-sm p-2 mb-2 rounded-md flex items-center justify-between">
+          <span>Connection lost. Messages cannot be sent.</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={reconnect}
+            className="text-red-500 hover:text-red-600 hover:bg-red-500/20"
+          >
+            Reconnect
+          </Button>
+        </div>
+      )}
       <TipTapEditor
         onTypingStart={handleTypingStart}
         onTypingStop={handleTypingStop}

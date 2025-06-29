@@ -41,6 +41,7 @@ export default function TipTapEditor({
   className,
 }: TipTapEditorProps) {
   const { client, isConnected } = useChatContext();
+  const [hasContent, setHasContent] = React.useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -115,6 +116,7 @@ export default function TipTapEditor({
       ? undefined
       : ({ editor }) => {
           const content = editor.getText().trim();
+          setHasContent(!!content);
           if (content) {
             onTypingStart?.();
           } else {
@@ -170,20 +172,18 @@ export default function TipTapEditor({
   }
 
   if (readonly) {
-    return <EditorContent editor={editor} />;
+    return (
+      <EditorContent
+        editor={editor}
+        className={clsx("tiptap-editor", className)}
+      />
+    );
   }
 
-  const hasContent = editor.getText().trim().length > 0;
-
   return (
-    <div className="px-4">
-      <div
-        className={clsx(
-          "bg-card/80 border rounded-lg shadow-lg overflow-hidden",
-          !isConnected ? "border-red-500/50" : "border-border"
-        )}
-      >
-        <div className="flex items-center gap-1 p-2 pb-0">
+    <div className="bg-card border border-border rounded-lg">
+      <div className="border-b border-border p-2">
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
@@ -217,8 +217,8 @@ export default function TipTapEditor({
             <Code className="h-4 w-4" />
           </Button>
           <LinkDialog
-            onAddLink={handleAddLink}
             isActive={editor.isActive("link")}
+            onAddLink={handleAddLink}
           />
           <Button
             variant="ghost"
