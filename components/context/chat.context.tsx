@@ -28,10 +28,10 @@ const getTabId = () => {
   if (typeof window === "undefined") {
     return "";
   }
-  let tabId = sessionStorage.getItem("teleparty_tab_id");
+  let tabId = localStorage.getItem("teleparty_tab_id");
   if (!tabId) {
     tabId = nanoid();
-    sessionStorage.setItem("teleparty_tab_id", tabId);
+    localStorage.setItem("teleparty_tab_id", tabId);
   }
   return tabId;
 };
@@ -71,13 +71,13 @@ export const ChatContextProvider = ({
   const [client, setClient] = useState<TelepartyClient | null>(null);
   const [chatRoomId, setChatRoomId] = useState<string | null>(() =>
     typeof window !== "undefined"
-      ? localStorage.getItem(CHAT_ROOM_STORAGE_KEY)
+      ? sessionStorage.getItem(CHAT_ROOM_STORAGE_KEY)
       : null
   );
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     if (typeof window === "undefined") return { nickname: DEFAULT_NICKNAME };
-    const savedNickname = localStorage.getItem(USER_NICKNAME_STORAGE_KEY);
-    const savedIcon = localStorage.getItem(USER_ICON_STORAGE_KEY);
+    const savedNickname = sessionStorage.getItem(USER_NICKNAME_STORAGE_KEY);
+    const savedIcon = sessionStorage.getItem(USER_ICON_STORAGE_KEY);
     return {
       nickname: savedNickname || DEFAULT_NICKNAME,
       userIcon: savedIcon || undefined,
@@ -88,7 +88,6 @@ export const ChatContextProvider = ({
   const [isReconnecting, setIsReconnecting] = useState(!!chatRoomId);
   const [users, setUsers] = useState<User[]>([]);
   const [usersTyping, setUsersTyping] = useState<string[]>([]);
-  const [isIntentionalDisconnect, setIsIntentionalDisconnect] = useState(false);
 
   const chatRoomIdRef = useRef(chatRoomId);
   useEffect(() => {
@@ -111,50 +110,48 @@ export const ChatContextProvider = ({
     setMessages(prev => [...prev, systemMessage]);
   }, []);
 
-  const handleIncomingMessage = useCallback(
-    (message: SocketMessage) => {
-      switch (message.type) {
-        case "userId":
-          const userId: string = message.data.userId;
-          setCurrentUser(prev =>
-            prev
-              ? { ...prev, socketId: userId }
-              : { nickname: DEFAULT_NICKNAME, socketId: userId }
+  const handleIncomingMessage = useCallback((message: SocketMessage) => {
+    switch (message.type) {
+      case "userId":
+        const userId: string = message.data.userId;
+        setCurrentUser(prev =>
+          prev
+            ? { ...prev, socketId: userId }
+            : { nickname: DEFAULT_NICKNAME, socketId: userId }
+        );
+        break;
+      case SocketMessageTypes.SEND_MESSAGE:
+        if (chatRoomIdRef.current) {
+          const messageData = message.data;
+          addMessageToDb(messageData, chatRoomIdRef.current);
+          setMessages(prev => [...prev, messageData]);
+        }
+        break;
+      case SocketMessageTypes.SET_TYPING_PRESENCE:
+        setCurrentUser(prevUser => {
+          setUsersTyping(
+            message.data.usersTyping.filter(
+              (userId: string) => userId !== prevUser?.socketId
+            ) || []
           );
-          break;
-        case SocketMessageTypes.SEND_MESSAGE:
-          if (chatRoomIdRef.current) {
-            addMessageToDb(message.data, chatRoomIdRef.current);
-          }
-          setMessages(prev => [...prev, message.data]);
-          break;
-        case SocketMessageTypes.SET_TYPING_PRESENCE:
-          setCurrentUser(prevUser => {
-            setUsersTyping(
-              message.data.usersTyping.filter(
-                (userId: string) => userId !== prevUser?.socketId
-              ) || []
-            );
-            return prevUser;
-          });
-          break;
-        case "userList":
-          const userList = message.data.map(
-            (user: {
-              userSettings: { userNickname?: string; userIcon?: string };
-              socketConnectionId: string;
-            }) => ({
-              nickname: user.userSettings.userNickname || DEFAULT_NICKNAME,
-              userIcon: user.userSettings.userIcon,
-              socketId: user.socketConnectionId,
-            })
-          );
-          setUsers(userList);
-          break;
-      }
-    },
-    [chatRoomIdRef]
-  );
+          return prevUser;
+        });
+        break;
+      case "userList":
+        const userList = message.data.map(
+          (user: {
+            userSettings: { userNickname?: string; userIcon?: string };
+            socketConnectionId: string;
+          }) => ({
+            nickname: user.userSettings.userNickname || DEFAULT_NICKNAME,
+            userIcon: user.userSettings.userIcon,
+            socketId: user.socketConnectionId,
+          })
+        );
+        setUsers(userList);
+        break;
+    }
+  }, []);
 
   const connect = useCallback(() => {
     const newClient = new TelepartyClient({
@@ -167,15 +164,55 @@ export const ChatContextProvider = ({
               chatRoomIdRef.current,
               currentUserRef.current.userIcon
             );
+            const history = await getMessagesForRoom(chatRoomIdRef.current);
+            const recentJoinMessage = history
+              ?.slice(-10)
+              .find(
+                msg =>
+                  msg.isSystemMessage &&
+                  msg.body === "joined the party" &&
+                  msg.userNickname === currentUserRef.current?.nickname
+              );
+
+            if (!isReconnecting && !recentJoinMessage) {
+              const systemMessage: SessionChatMessage = {
+                isSystemMessage: true,
+                body: "joined the party",
+                permId: "system",
+                timestamp: Date.now(),
+                userNickname: currentUserRef.current.nickname,
+                userIcon: currentUserRef.current.userIcon,
+              };
+
+              if (chatRoomIdRef.current) {
+                await addMessageToDb(systemMessage, chatRoomIdRef.current);
+              }
+              setMessages([...(history || []), systemMessage]);
+            } else {
+              setMessages(history || []);
+            }
           } catch (error) {
             console.error("Failed to rejoin chat room:", error);
             setChatRoomId(null);
-            localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
+            sessionStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
           }
         }
         setIsReconnecting(false);
       },
-      onClose: () => {
+      onClose: async () => {
+        if (chatRoomIdRef.current && currentUserRef.current?.nickname) {
+          const leftMessage: SessionChatMessage = {
+            isSystemMessage: true,
+            body: "left",
+            permId: "system",
+            timestamp: Date.now(),
+            userNickname: currentUserRef.current.nickname,
+            userIcon: currentUserRef.current.userIcon,
+          };
+          await addMessageToDb(leftMessage, chatRoomIdRef.current);
+          setMessages(prev => [...prev, leftMessage]);
+        }
+
         setIsConnected(false);
         setUsers([]);
         setUsersTyping([]);
@@ -194,54 +231,35 @@ export const ChatContextProvider = ({
       setIsReconnecting(true);
     }
     setClient(null);
-    setIsIntentionalDisconnect(false);
   }, [client, chatRoomId]);
 
   useEffect(() => {
-    if (!client && !isIntentionalDisconnect) {
-      const timeoutId = setTimeout(connect, 1000);
-      return () => clearTimeout(timeoutId);
+    if (!client) {
+      connect();
     }
-  }, [client, isIntentionalDisconnect, connect]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && !isConnected) {
-        reconnect();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [isConnected, reconnect]);
+  }, [client, connect]);
 
   useEffect(() => {
     if (chatRoomId) {
-      localStorage.setItem(CHAT_ROOM_STORAGE_KEY, chatRoomId);
-      const loadHistory = async () => {
-        const history = await getMessagesForRoom(chatRoomId);
-        setMessages(history);
-      };
-      loadHistory();
+      sessionStorage.setItem(CHAT_ROOM_STORAGE_KEY, chatRoomId);
     } else {
-      localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
+      sessionStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
       setMessages([]);
     }
   }, [chatRoomId]);
 
   useEffect(() => {
     if (currentUser?.nickname) {
-      localStorage.setItem(USER_NICKNAME_STORAGE_KEY, currentUser.nickname);
+      sessionStorage.setItem(USER_NICKNAME_STORAGE_KEY, currentUser.nickname);
     }
     if (currentUser?.userIcon) {
-      localStorage.setItem(USER_ICON_STORAGE_KEY, currentUser.userIcon);
+      sessionStorage.setItem(USER_ICON_STORAGE_KEY, currentUser.userIcon);
     } else {
-      localStorage.removeItem(USER_ICON_STORAGE_KEY);
+      sessionStorage.removeItem(USER_ICON_STORAGE_KEY);
     }
   }, [currentUser]);
 
   const disconnect = () => {
-    setIsIntentionalDisconnect(true);
     if (client) {
       client.teardown();
       setClient(null);
@@ -250,7 +268,7 @@ export const ChatContextProvider = ({
     setUsers([]);
     setUsersTyping([]);
     setChatRoomId(null);
-    localStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
+    sessionStorage.removeItem(CHAT_ROOM_STORAGE_KEY);
     addSystemMessage("Disconnected from chat service");
   };
 

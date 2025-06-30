@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from "react";
 
+import { SessionChatMessage } from "@watchparty-org/teleparty-websocket-lib";
+
 import TipTapEditor from "@/components/chat/tiptap-editor";
 import { useChatContext } from "@/components/context/chat.context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,16 +37,30 @@ export default function MessageList() {
     return currentMessage.userNickname !== previousMessage.userNickname;
   };
 
-  const filteredMessages = isReconnecting
-    ? messages.filter(
-        message =>
-          !(
-            message.isSystemMessage &&
-            message.body.includes("joined") &&
-            message.userNickname === currentUser?.nickname
-          )
-      )
-    : messages;
+  const filteredMessages = messages.reduce<SessionChatMessage[]>(
+    (acc, message, index) => {
+      if (!message.isSystemMessage) {
+        acc.push(message);
+        return acc;
+      }
+
+      const recentDuplicate = messages
+        .slice(Math.max(0, index - 5), index)
+        .find(
+          m =>
+            m.isSystemMessage &&
+            m.body === message.body &&
+            m.userNickname === message.userNickname
+        );
+
+      if (!recentDuplicate) {
+        acc.push(message);
+      }
+
+      return acc;
+    },
+    []
+  );
 
   return (
     <div className="min-h-0 overflow-hidden">

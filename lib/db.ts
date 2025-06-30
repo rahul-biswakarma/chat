@@ -23,9 +23,6 @@ export const addMessageToDb = async (
   message: SessionChatMessage,
   roomId: string
 ): Promise<void> => {
-  if (message.isSystemMessage) {
-    return;
-  }
   await db.messages.add({ ...message, roomId });
 };
 

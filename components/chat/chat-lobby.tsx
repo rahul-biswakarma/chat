@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { Loader2, MessageCircle, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -14,14 +14,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ChatLobby() {
-  const { client, isConnected, setChatRoomId, setCurrentUser, reconnect } =
-    useChatContext();
+  const {
+    client,
+    isConnected,
+    setChatRoomId,
+    setCurrentUser,
+    reconnect,
+    setMessages,
+  } = useChatContext();
 
   const [nickname, setNickname] = useState("");
   const [userIcon, setUserIcon] = useState("");
   const [joinRoomId, setJoinRoomId] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+
+  const isConnectedRef = useRef(isConnected);
+  useEffect(() => {
+    isConnectedRef.current = isConnected;
+  }, [isConnected]);
 
   const shortenUrl = async (url: string) => {
     if (url.length < 50) {
@@ -52,6 +63,26 @@ export default function ChatLobby() {
     }
   };
 
+  const waitForConnection = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (isConnectedRef.current) {
+        return resolve();
+      }
+      reconnect();
+      const timeout = setTimeout(() => {
+        clearInterval(interval);
+        reject(new Error("Connection timed out"));
+      }, 10000);
+      const interval = setInterval(() => {
+        if (isConnectedRef.current) {
+          clearTimeout(timeout);
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+  };
+
   const createChatRoom = async () => {
     if (!client || !nickname.trim()) {
       toast.error("Please enter a nickname", {
@@ -69,7 +100,7 @@ export default function ChatLobby() {
 
     try {
       setIsCreating(true);
-
+      await waitForConnection();
       const finalUserIcon = userIcon ? await shortenUrl(userIcon) : "";
 
       const newRoomId = await client.createChatRoom(
@@ -77,12 +108,25 @@ export default function ChatLobby() {
         finalUserIcon
       );
 
+      const currentNickname = nickname.trim();
+      const currentUserIcon = finalUserIcon || undefined;
+
       setCurrentUser(prev => ({
         ...prev,
-        nickname: nickname.trim(),
-        userIcon: finalUserIcon || undefined,
+        nickname: currentNickname,
+        userIcon: currentUserIcon,
       }));
 
+      // Add creation message
+      const creationMessage = {
+        isSystemMessage: true,
+        body: "created the party",
+        permId: "system",
+        timestamp: Date.now(),
+        userNickname: currentNickname,
+        userIcon: currentUserIcon,
+      };
+      setMessages([creationMessage]); // Set initial message
       setChatRoomId(newRoomId);
       toast.success("Chat room created!", {
         description: `Room ID: ${newRoomId}`,
@@ -115,7 +159,7 @@ export default function ChatLobby() {
 
     try {
       setIsJoining(true);
-
+      await waitForConnection();
       const finalUserIcon = userIcon ? await shortenUrl(userIcon) : "";
 
       await client.joinChatRoom(
@@ -124,10 +168,13 @@ export default function ChatLobby() {
         finalUserIcon
       );
 
+      const currentNickname = nickname.trim();
+      const currentUserIcon = finalUserIcon || undefined;
+
       setCurrentUser(prev => ({
         ...prev,
-        nickname: nickname.trim(),
-        userIcon: finalUserIcon || undefined,
+        nickname: currentNickname,
+        userIcon: currentUserIcon,
       }));
 
       setChatRoomId(joinRoomId.trim());
@@ -225,7 +272,7 @@ export default function ChatLobby() {
                     <Button
                       onClick={createChatRoom}
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                      disabled={!isConnected || !nickname.trim() || isCreating}
+                      disabled={!nickname.trim() || isCreating}
                     >
                       {isCreating ? (
                         <>
@@ -258,10 +305,7 @@ export default function ChatLobby() {
                       onClick={joinChatRoom}
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                       disabled={
-                        !isConnected ||
-                        !nickname.trim() ||
-                        !joinRoomId.trim() ||
-                        isJoining
+                        !nickname.trim() || !joinRoomId.trim() || isJoining
                       }
                     >
                       {isJoining ? (
@@ -291,7 +335,7 @@ export default function ChatLobby() {
                       onClick={reconnect}
                       className="text-primary hover:text-primary/80 ml-2"
                     >
-                      Reconnect
+                      Retry
                     </Button>
                   )}
                 </div>
